@@ -324,9 +324,20 @@ const GFX_MODES=['Standard','Transparent canvas','Keep frame buffer','Copy to 2D
 let GFX=0;
 try{const q=new URLSearchParams(location.search).get('gfx');if(q!==null&&q!=='')GFX=parseInt(q,10);else GFX=parseInt(localStorage.getItem('hcb-gfx')||(XBOX_UA?'6':'0'),10);}catch(e){}
 if(!(GFX>=0&&GFX<GFX_MODES.length))GFX=0;
-const RCls=(GFX===4&&THREE.WebGL1Renderer)?THREE.WebGL1Renderer:THREE.WebGLRenderer;
-try{ renderer=new RCls({antialias:!XBOX_UA&&GFX===0,powerPreference:XBOX_UA?'default':'high-performance',alpha:GFX===1,premultipliedAlpha:true,preserveDrawingBuffer:GFX===2||GFX===3}); }
-catch(e){ $('fatal').hidden=false; return; }
+const RCls=((GFX===4||GFX===6)&&THREE.WebGL1Renderer)?THREE.WebGL1Renderer:THREE.WebGLRenderer;
+const contextFailures=[];
+try{renderer=new RCls({antialias:!XBOX_UA&&GFX===0,powerPreference:XBOX_UA?'default':'high-performance',alpha:GFX===1,premultipliedAlpha:true,preserveDrawingBuffer:GFX===2||GFX===3,precision:GFX===6?'mediump':'highp'});}
+catch(e){contextFailures.push(String(e.message||e));}
+if(!renderer){
+  // A fresh canvas with minimal WebGL 1 attributes can recover when an ANGLE
+  // driver rejects WebGL 2 or the requested framebuffer attributes.
+  try{renderer=new THREE.WebGL1Renderer({canvas:document.createElement('canvas'),antialias:false,alpha:false,stencil:false,powerPreference:'default',precision:'mediump',failIfMajorPerformanceCaveat:false});GFX=6;}
+  catch(e){contextFailures.push(String(e.message||e));}
+}
+if(!renderer){
+  const fatal=$('fatal');fatal.hidden=false;fatal.innerHTML='<section style="max-width:660px"><h2 style="color:#f2a93b;font-size:28px">Xbox graphics could not start</h2><p>This browser could not create a WebGL graphics context, including the simpler WebGL 1 fallback.</p><p>Close other Edge tabs, fully quit Edge from the Xbox home screen, then reopen this game. If it still fails, restart the console and try again.</p><p>The website cannot enable 3D graphics if Edge or the console is blocking them.</p><button class="deploy" id="retryGraphics">Retry graphics</button><details style="margin-top:24px;font-size:15px"><summary>Technical details</summary><pre id="contextErrors" style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details></section>';
+  $('contextErrors').textContent=contextFailures.join('\n');$('retryGraphics').onclick=()=>{const url=new URL(location.href);url.searchParams.set('gfx','6');url.searchParams.set('v','3');location.replace(url.toString());};return;
+}
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(innerWidth,innerHeight);
 renderer.outputEncoding=(GFX===5||GFX===6)?THREE.LinearEncoding:THREE.sRGBEncoding;

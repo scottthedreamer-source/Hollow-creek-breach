@@ -82,5 +82,20 @@ const root=path.resolve(__dirname,'..');
    console.log(`PASS ${map} gfx=${gfx}: 15 valid bot spawns, 3 kits, RT fire, LB crouch, X reload, both stick leans, Y swap, hit detection, pause, rendering without JS errors.`);
    await page.close();
   }
+ // Regression cases for unavailable GPU contexts and renderer fallback.
+  for(const blocked of [false,true]){
+   const page=await browser.newPage();
+   await page.route('**/index.html?*',async route=>{
+    let html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+    html=html.replace("(function(){\n'use strict';", "(function(){\n'use strict';\nTHREE.WebGLRenderer=function(){throw new Error('Simulated primary renderer failure')};");
+    await route.fulfill({contentType:'text/html',body:html});
+   });
+   if(blocked)await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(/webgl/.test(type))return null;return original.call(this,type,...args)}});
+   await page.goto('http://127.0.0.1:8769/index.html?map=annex&gfx=0');
+   if(blocked){await page.waitForSelector('#retryGraphics');assert.match(await page.locator('#fatal').textContent(),/WebGL 1 fallback/);assert.match(await page.locator('#contextErrors').textContent(),/Simulated primary renderer failure/);}
+   else{await page.waitForFunction(()=>document.querySelector('#stage canvas'));assert.equal(await page.locator('#fatal').isVisible(),false);assert.match(await page.locator('#gfxNote').textContent(),/Xbox compatibility/);}
+   console.log('PASS graphics recovery: '+(blocked?'all contexts blocked shows actionable error':'primary renderer failure falls back to WebGL 1'));
+   await page.close();
+  }
  }finally{await browser?.close();server.kill()}
 })().catch(e=>{console.error(e);process.exitCode=1});
