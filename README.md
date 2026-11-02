@@ -39,7 +39,7 @@ Keyboard/mouse: WASD, Shift sprint, mouse fire/aim, Q/E lean, C crouch, R reload
 
 ## Graphics and Xbox limitation
 
-An existing Xbox white-screen issue is documented in `CODEX_HANDOFF.md`. New **display mode 7: Xbox compatibility** requests WebGL 1 with medium shader precision, replaces Standard materials with simpler Lambert lighting, removes the custom sky shader, disables tone mapping and uses linear output. If context creation fails, the game retries a fresh minimal WebGL 1 canvas and displays a recovery screen with actual error details if that also fails. The page cannot override a browser/console graphics restriction. New Xbox sessions default to this mode; a previously saved mode is preserved. Select it directly with `?gfx=6`, or cycle with X on the briefing/pause screen. Low quality limits pixel ratio and lights.
+An existing Xbox white-screen issue is documented in `CODEX_HANDOFF.md`. New **display mode 7: Xbox compatibility** requests WebGL 1 with medium shader precision, replaces Standard materials with simpler Lambert lighting, removes the custom sky shader, disables tone mapping and uses linear output. If context creation fails, the game retries a fresh minimal WebGL 1 canvas and automatically opens the Canvas-only Xbox Edition if that also fails. The page cannot override a browser/console graphics restriction. New Xbox sessions default to this mode; a previously saved mode is preserved. Select it directly with `?gfx=6`, or cycle with X on the briefing/pause screen. Low quality limits pixel ratio and lights.
 
 Chromium software-WebGL tests render all maps in standard and compatibility modes. This does **not** establish that the Xbox compositor/driver issue is fixed; test on the target console and inspect the pause-screen diagnostics if the view is still white.
 
@@ -62,3 +62,9 @@ node tests/smoke.cjs
 Use `CHROMIUM_PATH` to override `/usr/bin/chromium`; optionally use `SMOKE_MAP=annex SMOKE_GFX=6` for a focused run. Checks cover map startup, valid spawns, reachable positions on the new maps after breaching, loadout stats, controller fire/reload/crouch/lean/swap/pause/menu behavior, bot hit detection, disconnect safety and rendered pixels. Controller events are simulated; physical console testing remains separate.
 
 GitHub Pages serves `main` / root and rebuilds after pushes.
+
+## Canvas-only Xbox Edition
+
+Open `software.html` directly to bypass WebGL altogether. Failed WebGL initialization in the main game redirects here automatically. This is a separate lightweight 2.5D raycast shooter using Canvas 2D, with three compact single-floor map variants, armed bots with line-of-sight detection and return fire, three kits, a sidearm, ammo/reloading, crouch, lean, aiming, timer, pause, restart and controller menu navigation. It uses the requested RT/LB/X/stick-click/Y layout. It does not reproduce the 3D edition's upper floors, vaulting, destructible walls or grenades. The existing full 3D edition remains available on devices that support it.
+
+`node tests/software.cjs` deliberately blocks every WebGL context request and checks automatic redirection, all maps, valid bot spawns, actual bullet damage, controller crouch/lean/swap/fire/reload/pause and JavaScript errors. A physical Xbox is still needed for final device verification.

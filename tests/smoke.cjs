@@ -92,9 +92,9 @@ const root=path.resolve(__dirname,'..');
    });
    if(blocked)await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){if(/webgl/.test(type))return null;return original.call(this,type,...args)}});
    await page.goto('http://127.0.0.1:8769/index.html?map=annex&gfx=0');
-   if(blocked){await page.waitForSelector('#retryGraphics');assert.match(await page.locator('#fatal').textContent(),/WebGL 1 fallback/);assert.match(await page.locator('#contextErrors').textContent(),/Simulated primary renderer failure/);}
+   if(blocked){await page.waitForURL('**/software.html?*');await page.waitForSelector('#maps button');assert.match(await page.title(),/Xbox Edition/);}
    else{await page.waitForFunction(()=>document.querySelector('#stage canvas'));assert.equal(await page.locator('#fatal').isVisible(),false);assert.match(await page.locator('#gfxNote').textContent(),/Xbox compatibility/);}
-   console.log('PASS graphics recovery: '+(blocked?'all contexts blocked shows actionable error':'primary renderer failure falls back to WebGL 1'));
+   console.log('PASS graphics recovery: '+(blocked?'all contexts blocked opens Canvas-only game':'primary renderer failure falls back to WebGL 1'));
    await page.close();
   }
  }finally{await browser?.close();server.kill()}
