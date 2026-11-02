@@ -193,6 +193,8 @@ figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spac
         <label class="set" for="fov">Field of view <output id="fovOut">74°</output><input type="range" id="fov" min="60" max="95" step="1" value="74"></label>
         <button type="button" class="deploy" id="deploy">Deploy <span id="deployHint">CLICK OR PRESS Ⓐ</span></button>
         <p class="note" id="best"></p>
+        <button type="button" class="btn" id="nextGfx">Screen white? Try next display mode <small class="pad">Ⓧ</small></button>
+        <p class="note" id="gfxNote"></p>
         <p class="note" id="padNote">Xbox controller: press Ⓐ to deploy, D-pad ◀ ▶ to change threat level. On Xbox, allow Edge to use the controller for the game when it asks.</p>
         <p class="note" id="touchNote" hidden>This operation needs a keyboard and mouse or a game controller.</p>
         <h2>Loadout</h2>
@@ -249,6 +251,7 @@ figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spac
     <div class="eyebrow">Operation paused</div>
     <h3>Holding</h3>
     <p class="note" id="diagLine"></p>
+    <button type="button" class="btn" id="nextGfx2">Screen white? Try next display mode <small class="pad">Ⓧ</small></button>
     <div class="gfx" role="radiogroup" aria-label="Graphics quality"><button type="button" role="radio" data-q="high" aria-checked="true" id="q-high2">High<small>Shadows · all lights</small></button><button type="button" role="radio" data-q="low" aria-checked="false" id="q-low2">Low<small>Faster · D-pad ▲▼</small></button></div>
     <label class="set" for="sens2">Mouse sensitivity <output id="sensOut2">1.00</output><input type="range" id="sens2" min="0.2" max="3" step="0.05" value="1"></label>
     <div class="btns"><button type="button" class="btn pri" id="resume">Resume <small class="pad">Ⓐ</small></button><button type="button" class="btn" id="restart">Restart <small class="pad">Ⓨ</small></button><button type="button" class="btn" id="abort">Briefing <small class="pad">Ⓑ</small></button></div>
@@ -295,18 +298,29 @@ function srand(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math
 /* ================= Renderer ================= */
 let renderer;
 const XBOX_UA=/Xbox/i.test(navigator.userAgent);
-try{ renderer=new THREE.WebGLRenderer({antialias:!XBOX_UA,powerPreference:XBOX_UA?'default':'high-performance'}); }
+/* Display modes: different ways of getting the 3D picture onto the screen, for browsers (e.g. Edge on Xbox) that render frames but show a blank canvas. */
+const GFX_MODES=['Standard','Transparent canvas','Keep frame buffer','Copy to 2D canvas','WebGL 1','Plain colour output'];
+let GFX=0;
+try{const q=new URLSearchParams(location.search).get('gfx');if(q!==null&&q!=='')GFX=parseInt(q,10);else GFX=parseInt(localStorage.getItem('hcb-gfx')||'0',10);}catch(e){}
+if(!(GFX>=0&&GFX<GFX_MODES.length))GFX=0;
+const RCls=(GFX===4&&THREE.WebGL1Renderer)?THREE.WebGL1Renderer:THREE.WebGLRenderer;
+try{ renderer=new RCls({antialias:!XBOX_UA&&GFX===0,powerPreference:XBOX_UA?'default':'high-performance',alpha:GFX===1,premultipliedAlpha:true,preserveDrawingBuffer:GFX===2||GFX===3}); }
 catch(e){ $('fatal').hidden=false; return; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(innerWidth,innerHeight);
-renderer.outputEncoding=THREE.sRGBEncoding;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.outputEncoding=GFX===5?THREE.LinearEncoding:THREE.sRGBEncoding;
+renderer.toneMapping=GFX===5?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;
+if(GFX===1)renderer.setClearColor(0x0b0f12,1);
 renderer.toneMappingExposure=1.05;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.autoClear=false;
-$('stage').appendChild(renderer.domElement);
-const canvas=renderer.domElement;
+let outCanvas=null,out2d=null;
+if(GFX===3){outCanvas=document.createElement('canvas');out2d=outCanvas.getContext('2d',{alpha:false});$('stage').appendChild(outCanvas);}
+else $('stage').appendChild(renderer.domElement);
+const canvas=outCanvas||renderer.domElement;
+function syncOut(){if(!outCanvas)return;const w=renderer.domElement.width,h=renderer.domElement.height;if(outCanvas.width!==w||outCanvas.height!==h){outCanvas.width=w;outCanvas.height=h;}}
+syncOut();
 
 const scene=new THREE.Scene();
 const FOGC=0xa7a59b;
@@ -315,7 +329,7 @@ const camera=new THREE.PerspectiveCamera(74,innerWidth/innerHeight,0.04,500);
 camera.rotation.order='YXZ';
 const vmScene=new THREE.Scene();
 const vmCamera=new THREE.PerspectiveCamera(54,innerWidth/innerHeight,0.01,10);
-addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.aspect=vmCamera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();vmCamera.updateProjectionMatrix();});
+addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);syncOut();camera.aspect=vmCamera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();vmCamera.updateProjectionMatrix();});
 
 /* ================= Procedural textures ================= */
 const ANI=Math.min(8,renderer.capabilities.getMaxAnisotropy());
@@ -1165,7 +1179,7 @@ function lockPointer(){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.c
 function startGame(fromPad){if(G.state==='play'&&!G.paused&&fromPad!=='restart'&&$('menu').hidden&&$('pause').hidden)return;audioInit();resetLevel();G.state='play';G.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
   camera.fov=SET.fov;camera.updateProjectionMatrix();if(fromPad===true||padRecent())G.noLock=true;else lockPointer();
   toast('Clear House · '+G.D.label,'Hollow Creek Farmhouse',`Neutralise ${G.total} hostiles · 5:00`,4200);}
-function pauseGame(){if(G.state!=='play'||G.paused)return;G.paused=true;$('pause').hidden=false;try{$('diagLine').textContent=diagText();}catch(e){}for(const k in K)K[k]=false;mouse.l=mouse.r=false;}
+function pauseGame(){if(G.state!=='play'||G.paused)return;G.paused=true;G.pxDone=false;$('pause').hidden=false;try{$('diagLine').textContent=diagText();}catch(e){}for(const k in K)K[k]=false;mouse.l=mouse.r=false;}
 function resumeGame(){$('pause').hidden=true;G.paused=false;audioInit();if(!padRecent())lockPointer();}
 function endGame(res){if(G.state!=='play')return;G.state='end';G.result=res;if(document.pointerLockElement)document.exitPointerLock();for(const k in K)K[k]=false;mouse.l=mouse.r=false;
   const win=res==='win';$('endEyebrow').textContent=win?'Operation complete · '+G.D.label:'Operation failed · '+G.D.label;
@@ -1199,6 +1213,7 @@ function pollPad(dt){
   let any=PAD.lx||PAD.ly||PAD.rx||PAD.ry;for(let i=0;i<gp.buttons.length;i++)if(bt(i))any=true;
   if(any)PAD.lastUse=performance.now();
   const ui=G.state!=='play'||G.paused;
+  if((G.state==='menu'||G.paused)&&hit(2)){nextGfx();return;}
   if((G.state==='menu'||G.paused)&&(hit(12)||hit(13)))setQuality(hit(12)?'high':'low',true);
   if(G.state==='menu'){if(hit(0))startGame(true);const order=['recruit','regular','veteran'];if(hit(14)||hit(15)){const k=order.indexOf(G.diff);setDiff(order[clamp(k+(hit(15)?1:-1),0,2)]);}}
   else if(G.state==='end'&&!$('end').hidden){if(hit(0))startGame(true);else if(hit(1))toMenu();}
@@ -1230,8 +1245,13 @@ function padKey(e,down){if(!isPadKey(e))return false;e.preventDefault();e.stopPr
 addEventListener('keydown',e=>{if(padKey(e,true))e.stopImmediatePropagation();},true);
 addEventListener('keyup',e=>{if(padKey(e,false))e.stopImmediatePropagation();},true);
 function keyPadState(){const buttons=[];for(let i=0;i<17;i++)buttons.push({pressed:false,value:0});for(const n in GPKEYS)if(KEYPAD.held[n])buttons[GPKEYS[n]]={pressed:true,value:1};const axes=[0,0,0,0];for(const n in GPAXKEYS)if(KEYPAD.held[n]){const [a,v]=GPAXKEYS[n];axes[a]=v;}return {id:'Controller (key events)',mapping:'standard',connected:true,buttons,axes};}
+function nextGfx(){const n=(GFX+1)%GFX_MODES.length;try{localStorage.setItem('hcb-gfx',String(n));}catch(e){}
+  let u=null;try{u=new URL(location.href);}catch(e){}
+  if(u&&/^https?:$/.test(u.protocol)&&!/claude|anthropic|usercontent/i.test(u.hostname)){u.searchParams.set('gfx',String(n));location.replace(u.toString());}else location.reload();}
+$('nextGfx').addEventListener('click',nextGfx);$('nextGfx2').addEventListener('click',nextGfx);
+$('gfxNote').textContent=`Display mode ${GFX+1} of ${GFX_MODES.length}: ${GFX_MODES[GFX]}. If the game view is white, press Ⓧ here (or in the pause menu) to try the next one.`;
 function diagText(){let gpu='unknown';try{const gl=renderer.getContext();const ext=gl.getExtension('WEBGL_debug_renderer_info');gpu=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);}catch(e){}
-  const gp=PAD.gp;return `Graphics: ${SET.q} · ${renderer.capabilities.isWebGL2?'WebGL2':'WebGL1'} · ${String(gpu).slice(0,70)} · ${Math.round(perf.lastFps||0)} fps · Controller: ${gp?gp.id.slice(0,40)+' ('+(gp.mapping||'non-standard')+')':'none detected'}${runErr?' · Error: '+(runErr.message||runErr):''}`;}
+  const gp=PAD.gp;return `Display mode ${GFX+1} of ${GFX_MODES.length} (${GFX_MODES[GFX]}) · drawn colour ${G.px||'?'} · Graphics: ${SET.q} · ${renderer.capabilities.isWebGL2?'WebGL2':'WebGL1'} · ${String(gpu).slice(0,70)} · ${Math.round(perf.lastFps||0)} fps · Controller: ${gp?gp.id.slice(0,40)+' ('+(gp.mapping||'non-standard')+')':'none detected'}${runErr?' · Error: '+(runErr.message||runErr):''}`;}
 addEventListener('gamepadconnected',()=>{$('deployHint').textContent='PRESS Ⓐ';});
 
 /* ================= Input ================= */
@@ -1303,7 +1323,7 @@ function showDiag(msg){const d=$('diag');d.textContent=msg;d.hidden=false;clearT
 function setQuality(q,save){
   SET.q=q;const low=q==='low';
   for(const b of document.querySelectorAll('.gfx button'))b.setAttribute('aria-checked',String(b.dataset.q===q));
-  renderer.setPixelRatio(low?1:Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);
+  renderer.setPixelRatio(low?1:Math.min(window.devicePixelRatio||1,1.5));renderer.setSize(innerWidth,innerHeight);syncOut();
   renderer.shadowMap.enabled=!low;sun.castShadow=!low;
   lamps.forEach((L,i)=>{L.visible=!low||i===0||i===2||i===3;});
   scene.fog.far=low?110:150;
@@ -1318,8 +1338,8 @@ function gfxProblem(why){
 }
 const _cerr=console.error.bind(console);
 console.error=function(...a){try{const m=a.map(String).join(' ');if(/WebGLProgram|Shader Error|shader error|Program Info Log/i.test(m))gfxProblem('a lighting shader failed to compile');}catch(e){}return _cerr(...a);};
-canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();showDiag('The graphics chip dropped the 3D view (out of graphics memory). Recovering in low graphics…');},false);
-canvas.addEventListener('webglcontextrestored',()=>{setQuality('low',true);$('diag').hidden=true;},false);
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();showDiag('The graphics chip dropped the 3D view (out of graphics memory). Recovering in low graphics…');},false);
+renderer.domElement.addEventListener('webglcontextrestored',()=>{setQuality('low',true);$('diag').hidden=true;},false);
 let runErr=null;
 function reportErr(where,e){if(runErr)return;runErr=e;_cerr(e);showDiag(`Game error in ${where}: ${e&&e.message?e.message:e}`);}
 addEventListener('error',e=>reportErr('page',e.error||e.message));
@@ -1356,6 +1376,8 @@ function frame(nowT){
   try{
     renderer.clear();renderer.render(scene,camera);
     if(G.state==='play'||(G.state==='end'&&P.alive)){renderer.clearDepth();renderer.render(vmScene,vmCamera);}
+    if(out2d)out2d.drawImage(renderer.domElement,0,0);
+    if(!G.pxDone&&(G.paused||G.state==='menu')){G.pxDone=true;try{const gl=renderer.getContext(),px=new Uint8Array(4);gl.readPixels(gl.drawingBufferWidth>>1,(gl.drawingBufferHeight*.6)|0,1,1,gl.RGBA,gl.UNSIGNED_BYTE,px);G.px=`${px[0]},${px[1]},${px[2]}`;}catch(e){G.px='unreadable';}if(G.paused)$('diagLine').textContent=diagText();}
   }catch(e){reportErr('render',e);}
 }
 requestAnimationFrame(frame);
