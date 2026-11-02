@@ -137,6 +137,7 @@ figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spac
 .gfx button[aria-checked="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
 #fatal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;font-size:20px;background:var(--ink);color:var(--fg)}
 @media (prefers-reduced-motion:reduce){#feed .k{animation:none}}
+.choices{display:grid;gap:6px}.choice{background:var(--raise);border:1px solid var(--line);padding:9px 12px;text-align:left;cursor:pointer;font-size:19px;font-weight:700}.choice small{display:block;font-family:var(--mono);font-size:11px;font-weight:400;color:var(--muted);margin-top:3px}.choice[aria-checked="true"]{border-color:var(--amber);box-shadow:inset 3px 0 var(--amber)}.choice[aria-checked="true"] small{color:#e1b878}.pad-focus{color:var(--amber);border-bottom:2px solid var(--amber)}.pad-focus:before{content:'▶ ';}.overlay{align-items:flex-start}
 </style>
 </head>
 <body>
@@ -172,39 +173,44 @@ figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spac
   <div class="dossier">
     <header>
       <div class="eyebrow">Situation · Clear House</div>
-      <h1>Hollow Creek<span>Farmhouse · Route 9</span></h1>
-      <p class="lede">Armed hostiles hold a two-storey farmhouse and its attached garage. Breach from the south yard, clear every room on both floors and neutralise all of them before the five-minute clock runs out. No civilians are on site.</p>
+      <h1>Hollow Creek<span id="mapTitle">Farmhouse · Route 9</span></h1>
+      <p class="lede" id="missionNote">Armed hostiles hold a two-storey farmhouse and its attached garage. Breach from the south yard, clear every room on both floors and neutralise all of them before the five-minute clock runs out. No civilians are on site.</p>
     </header>
     <div class="grid">
       <section class="col">
-        <h2>Threat level</h2>
+        <h2 id="row-threat">Threat level</h2>
         <div class="diff" role="radiogroup" aria-label="Threat level">
           <button type="button" role="radio" data-d="recruit" aria-checked="false" id="d-recruit">Recruit<small>9 hostiles · slow</small></button>
           <button type="button" role="radio" data-d="regular" aria-checked="true" id="d-regular">Regular<small>12 hostiles</small></button>
           <button type="button" role="radio" data-d="veteran" aria-checked="false" id="d-veteran">Veteran<small>15 · sharp aim</small></button>
         </div>
-        <h2>Graphics</h2>
+        <h2 id="row-map">Operation map</h2>
+        <div class="choices" id="mapChoices" role="radiogroup" aria-label="Operation map"></div>
+        <h2 id="row-loadout">Gun loadout</h2>
+        <div class="choices" id="loadoutChoices" role="radiogroup" aria-label="Gun loadout"></div>
+        <p class="note">Every kit includes a P-9 pistol, two frags and a weapon light. Y swaps primary / sidearm.</p>
+        <h2 id="row-graphics">Graphics</h2>
         <div class="gfx" role="radiogroup" aria-label="Graphics quality">
           <button type="button" role="radio" data-q="high" aria-checked="true" id="q-high">High<small>Shadows · all lights</small></button>
-          <button type="button" role="radio" data-q="low" aria-checked="false" id="q-low">Low<small>Xbox · older PCs · D-pad ▲▼</small></button>
+          <button type="button" role="radio" data-q="low" aria-checked="false" id="q-low">Low<small>Xbox · older PCs</small></button>
         </div>
         <h2>Settings</h2>
-        <label class="set" for="sens">Mouse sensitivity <output id="sensOut">1.00</output><input type="range" id="sens" min="0.2" max="3" step="0.05" value="1"></label>
+        <label class="set" for="sens">Look sensitivity <output id="sensOut">1.00</output><input type="range" id="sens" min="0.2" max="3" step="0.05" value="1"></label>
         <label class="set" for="fov">Field of view <output id="fovOut">74°</output><input type="range" id="fov" min="60" max="95" step="1" value="74"></label>
         <button type="button" class="deploy" id="deploy">Deploy <span id="deployHint">CLICK OR PRESS Ⓐ</span></button>
         <p class="note" id="best"></p>
         <button type="button" class="btn" id="nextGfx">Screen white? Try next display mode <small class="pad">Ⓧ</small></button>
         <p class="note" id="gfxNote"></p>
-        <p class="note" id="padNote">Xbox controller: press Ⓐ to deploy, D-pad ◀ ▶ to change threat level. On Xbox, allow Edge to use the controller for the game when it asks.</p>
+        <p class="note" id="padNote">Xbox controller: D-pad ▲▼ selects threat, map, loadout or graphics; ◀ ▶ changes the highlighted choice. RB cycles loadouts. Ⓐ deploys. On Xbox, allow Edge to use the controller for the game when it asks.</p>
         <p class="note" id="touchNote" hidden>This operation needs a keyboard and mouse or a game controller.</p>
-        <h2>Loadout</h2>
-        <p class="note">AR-C 5.56 carbine with holographic sight · P-9 pistol · 2 frag grenades · weapon light.<br>Interior walls are drywall: rounds go through them. Exterior walls stop rounds. Doors marked amber on the plan are barricaded.</p>
+        <h2>Breach intel</h2>
+        <p class="note">Interior walls are drywall: rounds go through them. Exterior walls stop rounds. Doors marked amber on the plan are barricaded.</p>
       </section>
       <section class="col">
         <h2>Site intel</h2>
         <div class="plans">
-          <figure><canvas id="plan0" width="600" height="320"></canvas><figcaption>Ground floor and garage · insertion from the south yard</figcaption></figure>
-          <figure><canvas id="plan1" width="600" height="320"></canvas><figcaption>Upper floor · stairs from the front hall</figcaption></figure>
+          <figure><canvas id="plan0" width="600" height="320"></canvas><figcaption><span id="planCaption">Ground floor and garage · insertion from the south yard</span></figcaption></figure>
+          <figure id="upperPlan"><canvas id="plan1" width="600" height="320"></canvas><figcaption>Upper floor · stairs from the front hall</figcaption></figure>
         </div>
         <h2>Controls</h2>
         <div class="keys">
@@ -253,7 +259,7 @@ figcaption{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spac
     <p class="note" id="diagLine"></p>
     <button type="button" class="btn" id="nextGfx2">Screen white? Try next display mode <small class="pad">Ⓧ</small></button>
     <div class="gfx" role="radiogroup" aria-label="Graphics quality"><button type="button" role="radio" data-q="high" aria-checked="true" id="q-high2">High<small>Shadows · all lights</small></button><button type="button" role="radio" data-q="low" aria-checked="false" id="q-low2">Low<small>Faster · D-pad ▲▼</small></button></div>
-    <label class="set" for="sens2">Mouse sensitivity <output id="sensOut2">1.00</output><input type="range" id="sens2" min="0.2" max="3" step="0.05" value="1"></label>
+    <label class="set" for="sens2">Look sensitivity <output id="sensOut2">1.00</output><input type="range" id="sens2" min="0.2" max="3" step="0.05" value="1"></label>
     <div class="btns"><button type="button" class="btn pri" id="resume">Resume <small class="pad">Ⓐ</small></button><button type="button" class="btn" id="restart">Restart <small class="pad">Ⓨ</small></button><button type="button" class="btn" id="abort">Briefing <small class="pad">Ⓑ</small></button></div>
   </div>
 </div>
@@ -295,22 +301,37 @@ const wrapA=a=>{a=(a+Math.PI)%(Math.PI*2);if(a<0)a+=Math.PI*2;return a-Math.PI;}
 const C=hex=>new THREE.Color(hex).convertSRGBToLinear();
 function srand(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 
+const MAPS={
+  farmhouse:{name:'Hollow Creek Farmhouse',sub:'Two storeys · residential',note:'Breach the farmhouse and garage. Clear both floors and watch the stairwell.'},
+  depot:{name:'Blackwater Depot',sub:'Single storey · industrial',note:'Sweep the loading hall, dispatch office and storage bays. Crates break up long sightlines.'},
+  annex:{name:'Ridgeway Annex',sub:'Single storey · offices',note:'Clear six offices off a central corridor. Multiple side entrances and soft partitions reward careful leaning.'}
+};
+let mapKey='farmhouse';
+try{const candidate=new URLSearchParams(location.search).get('map')||localStorage.getItem('hcb-map');if(MAPS[candidate])mapKey=candidate;}catch(e){}
+const MAP=MAPS[mapKey];
+const LOADOUTS={
+  assault:{label:'Assault',note:'AR-C 5.56 · 30 rounds · balanced recoil',stats:{name:'AR-C 5.56 Carbine',mag:30,res0:150,rpm:780,auto:true,dmg:40,rv:.0105,rh:.0055,hip:.03,adsS:.0016,reload:2.3,reloadE:2.9,fall0:25,fall1:45,minMul:.75}},
+  entry:{label:'Entry',note:'VX-9 compact SMG · 40 rounds · fast, lower damage',stats:{name:'VX-9 Compact SMG',mag:40,res0:200,rpm:960,auto:true,dmg:27,rv:.007,rh:.004,hip:.025,adsS:.002,reload:1.9,reloadE:2.4,fall0:12,fall1:30,minMul:.55}},
+  marksman:{label:'Marksman',note:'MR-7 rifle · 20 rounds · hard-hitting semi-auto',stats:{name:'MR-7 Marksman Rifle',mag:20,res0:100,rpm:300,auto:false,dmg:72,rv:.023,rh:.005,hip:.045,adsS:.0008,reload:2.7,reloadE:3.2,fall0:40,fall1:75,minMul:.85}}
+};
+let loadoutKey='assault';try{const k=localStorage.getItem('hcb-loadout');if(LOADOUTS[k])loadoutKey=k;}catch(e){}
+let menuRow=0;
 /* ================= Renderer ================= */
 let renderer;
 const XBOX_UA=/Xbox/i.test(navigator.userAgent);
 /* Display modes: different ways of getting the 3D picture onto the screen, for browsers (e.g. Edge on Xbox) that render frames but show a blank canvas. */
-const GFX_MODES=['Standard','Transparent canvas','Keep frame buffer','Copy to 2D canvas','WebGL 1','Plain colour output'];
+const GFX_MODES=['Standard','Transparent canvas','Keep frame buffer','Copy to 2D canvas','WebGL 1','Plain colour output','Xbox compatibility'];
 let GFX=0;
-try{const q=new URLSearchParams(location.search).get('gfx');if(q!==null&&q!=='')GFX=parseInt(q,10);else GFX=parseInt(localStorage.getItem('hcb-gfx')||'0',10);}catch(e){}
+try{const q=new URLSearchParams(location.search).get('gfx');if(q!==null&&q!=='')GFX=parseInt(q,10);else GFX=parseInt(localStorage.getItem('hcb-gfx')||(XBOX_UA?'6':'0'),10);}catch(e){}
 if(!(GFX>=0&&GFX<GFX_MODES.length))GFX=0;
 const RCls=(GFX===4&&THREE.WebGL1Renderer)?THREE.WebGL1Renderer:THREE.WebGLRenderer;
 try{ renderer=new RCls({antialias:!XBOX_UA&&GFX===0,powerPreference:XBOX_UA?'default':'high-performance',alpha:GFX===1,premultipliedAlpha:true,preserveDrawingBuffer:GFX===2||GFX===3}); }
 catch(e){ $('fatal').hidden=false; return; }
 renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 renderer.setSize(innerWidth,innerHeight);
-renderer.outputEncoding=GFX===5?THREE.LinearEncoding:THREE.sRGBEncoding;
-renderer.toneMapping=GFX===5?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;
-if(GFX===1)renderer.setClearColor(0x0b0f12,1);
+renderer.outputEncoding=(GFX===5||GFX===6)?THREE.LinearEncoding:THREE.sRGBEncoding;
+renderer.toneMapping=(GFX===5||GFX===6)?THREE.NoToneMapping:THREE.ACESFilmicToneMapping;
+if(GFX===1||GFX===6)renderer.setClearColor(0x0b0f12,1);
 renderer.toneMappingExposure=1.05;
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
@@ -451,6 +472,12 @@ const ROOMS=[
   {n:'Guest Room',l:1,x0:0,x1:7,z0:5.5,z1:12,f:'carpet',w:'paperGreen'},
   {n:'Master Bedroom',l:1,x0:10.5,x1:18,z0:5.5,z1:12,f:'woodFloor',w:'paperRed'},
 ];
+if(mapKey!=='farmhouse'){
+  ROOMS.length=0;
+  const labels=mapKey==='annex'?['Records','Briefing','Server Room','Reception','Operations','Director Office']:['Dispatch','Loading Hall','Tool Store','Packing','Shipping Hall','Storage'];
+  for(let row=0;row<2;row++)for(let col=0;col<3;col++)ROOMS.push({n:labels[row*3+col],l:0,x0:[0,8,18][col],x1:[8,18,26][col],z0:row?7:0,z1:row?12:5,f:mapKey==='depot'?'concrete':'carpetBlue',w:mapKey==='depot'?'cinder':'plaster'});
+  ROOMS.push({n:mapKey==='depot'?'Transit Aisle':'Central Corridor',l:0,x0:0,x1:26,z0:5,z1:7,f:'tile',w:'plaster'});
+}
 function roomAt(x,z,l){for(const r of ROOMS)if(r.l===l&&x>=r.x0&&x<=r.x1&&z>=r.z0&&z<=r.z1)return r;return null;}
 function wallMatAt(x,z,l){const r=roomAt(x,z,l);return r?M[r.w]:M.siding;}
 const XS=[0,4.5,7,10.5,14.5,18,26],ZS=[0,3.2,5.5,9,12];
@@ -534,6 +561,9 @@ const hwin=(c,w)=>({c,w,sill:1.5,top:2.2,type:'window'});
 const door=(c,w,bar)=>({c,w,sill:0,top:2.2,type:'door',bar:!!bar});
 const arch=(c,w)=>({c,w,sill:0,top:2.45,type:'door'});
 
+function F(l,x0,y0,z0,x1,y1,z1,m,o){const b=l*3.2;return addBox(x0,b+y0,z0,x1,b+y1,z1,m,Object.assign({kind:'soft',surf:'wood'},o||{}));}
+const RUN=(10.5-5.6)/16;
+if(mapKey==='farmhouse'){
 // floors & slabs
 for(const r of ROOMS){
   if(r.l===0){addBox(r.x0-.08,-.12,r.z0-.08,r.x1+.08,0,r.z1+.08,M[r.f],{surf:SURF[r.f]||'wood',cast:false});}
@@ -582,7 +612,6 @@ wall('x',5.5,10.5,18,3.2,6.2,t,[door(16.2,.9)]);
 wall('z',14.5,0,5.5,3.2,6.2,t,[]);
 
 // staircase (16 risers, front hall -> upper hall)
-const RUN=(10.5-5.6)/16;
 for(let i=1;i<=16;i++){const z1=10.5-(i-1)*RUN,z0=10.5-i*RUN;addBox(7.07,0,z0,8.3,i*.2,z1,[M.darkWood,M.darkWood,M.woodFloor,M.darkWood,M.trim,M.trim],{surf:'wood'});}
 addBox(8.3,3.2,5.6,8.36,4.15,10.5,M.darkWood,{surf:'wood'});
 addBox(7.07,3.2,10.47,8.36,4.15,10.53,M.darkWood,{surf:'wood'});
@@ -606,7 +635,7 @@ addBox(6.15,.18,14.08,7.9,.95,14.16,M.trim,{surf:'wood'});addBox(9.78,.18,14.08,
 addBox(6.06,.18,12.3,6.14,.95,14.1,M.trim,{surf:'wood'});addBox(11.86,.18,12.3,11.94,.95,14.1,M.trim,{surf:'wood'});
 
 /* ---- Furniture ---- */
-function F(l,x0,y0,z0,x1,y1,z1,m,o){const b=l*3.2;return addBox(x0,b+y0,z0,x1,b+y1,z1,m,Object.assign({kind:'soft',surf:'wood'},o||{}));}
+
 function table(l,x0,z0,x1,z1,h,m){F(l,x0,h-.06,z0,x1,h,z1,m);for(const [x,z] of [[x0+.05,z0+.05],[x1-.11,z0+.05],[x0+.05,z1-.11],[x1-.11,z1-.11]])F(l,x,0,z,x+.06,h-.06,z+.06,m,{solid:false});F(l,x0+.05,0,z0+.05,x1-.05,h-.06,z1-.05,m,{shoot:false,cast:false}).visible=false;}
 function chair(l,x,z,rot,m){F(l,x-.22,.44,z-.22,x+.22,.48,z+.22,m);const bx=rot===0?[x-.22,z+.18,x+.22,z+.22]:rot===1?[x-.22,z-.22,x-.18,z+.22]:rot===2?[x-.22,z-.22,x+.22,z-.18]:[x+.18,z-.22,x+.22,z+.22];F(l,bx[0],.48,bx[1],bx[2],1.0,bx[3],m);for(const [dx,dz] of [[-.2,-.2],[.16,-.2],[-.2,.16],[.16,.16]])F(l,x+dx,0,z+dz,x+dx+.04,.44,z+dz+.04,m,{solid:false});}
 function rug(l,x0,z0,x1,z1,hex){addBox(x0,l*3.2,z0,x1,l*3.2+.012,z1,mat(TX.carpet,1.2,{color:C(hex),roughness:1}),{solid:false,cast:false,surf:'carpet'});}
@@ -659,6 +688,32 @@ F(1,11,0,11.45,12.5,1.1,11.9,M.darkWood);F(1,10.65,0,5.7,11.3,2.1,7.2,M.darkWood
 // upper hall
 F(1,7.2,0,.3,8.2,.8,.8,M.darkWood);
 
+}else{
+  // Single-storey layouts share exterior scale and established physics.
+  for(const r of ROOMS)addBox(r.x0,-.12,r.z0,r.x1,0,r.z1,M[r.f],{surf:SURF[r.f]||'concrete',cast:false});
+  addBox(-.15,3.0,-.15,26.15,3.2,12.15,[M.trim,M.trim,M.roofTar,M.ceiling,M.trim,M.trim],{surf:'concrete'});
+  wall('x',0,-.15,26.15,0,3.2,T,[win(4,1.6),door(13,1.5,true),win(22,1.6)],'hard');
+  wall('x',12,-.15,26.15,0,3.2,T,[win(4,1.6),door(13,1.8,true),win(22,1.6)],'hard');
+  for(const x of [0,26])wall('z',x,0,12,0,3.2,T,[door(6,1.6,true)],'hard');
+  if(mapKey==='annex'){
+    for(const z of [5,7])wall('x',z,0,26,0,3,t,[door(4,1.4),door(13,1.8),door(22,1.4)]);
+    for(const x of [8,18])for(const [z0,z1] of [[0,5],[7,12]])wall('z',x,z0,z1,0,3,t,[door((z0+z1)/2,1.3)]);
+    for(const [x,z] of [[1,1],[10,1],[20,1],[1,9],[10,10],[20,9]]){
+      addBox(x,0,z,x+2,.76,z+.8,M.darkWood,{kind:'soft'});
+      addBox(x+.5,.76,z+.15,x+1.1,1.2,z+.24,M.black,{solid:false});
+      addBox(x+.1,0,z+1.4,x+.7,.5,z+1.9,M.fabric,{kind:'soft'});
+    }
+    for(const x of [7,17,25])addBox(x-.7,0,.2,x,2.1,.8,M.metal,{surf:'metal'});
+  }else{
+    for(const x of [8,18])wall('z',x,0,12,0,3,t,[arch(2.5,2),arch(6,2.2),arch(9.5,2)]);
+    for(const [x0,x1] of [[0,8],[18,26]])wall('x',5,x0,x1,0,3,t,[door((x0+x1)/2,1.6)]);
+    for(const [x,z,h] of [[1,1,1.3],[5,8,1],[10,3,1.6],[15,8,1.2],[20,1,1.6],[23,8,1.2],[11,9,1]]){
+      addBox(x,0,z,x+1.4,h,z+1.2,M.crate,{kind:'soft'});
+      addBox(x+.1,h,z+.1,x+1.3,h+.25,z+1.1,M.crate,{kind:'soft'});
+    }
+    for(const z of [1,9])addBox(24.8,0,z,25.7,2.2,z+1.8,M.metal,{surf:'metal'});
+  }
+}
 /* ---- Exterior ---- */
 (function(){
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(400,400),M.grass);ground.rotation.x=-Math.PI/2;ground.position.y=-.01;
@@ -706,7 +761,7 @@ const sunDir=new V3(-0.55,0.42,0.72).normalize();
   const sky=new THREE.Mesh(new THREE.SphereGeometry(450,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,fog:false,uniforms:{top:{value:new THREE.Color(0x4d6680)},mid:{value:new THREE.Color(0xc8b79c)},bot:{value:new THREE.Color(0x7f8175)},sd:{value:sunDir}},
   vertexShader:'varying vec3 vP;void main(){vP=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
   fragmentShader:'uniform vec3 top,mid,bot,sd;varying vec3 vP;void main(){float h=vP.y;vec3 c=h>0.0?mix(mid,top,pow(clamp(h*1.5,0.,1.),.55)):mix(mid,bot,clamp(-h*5.,0.,1.));float s=max(dot(vP,sd),0.);c+=vec3(1.,.78,.5)*pow(s,400.)*2.+vec3(1.,.62,.32)*pow(s,10.)*.32;gl_FragColor=vec4(c,1.);}'}));
-  sky.renderOrder=-1;scene.add(sky);
+  if(GFX===6){sky.material.dispose();sky.material=new THREE.MeshBasicMaterial({color:0x74869a,side:THREE.BackSide,fog:false});}sky.renderOrder=-1;scene.add(sky);
 })();
 const hemi=new THREE.HemisphereLight(C(0xbfcad6),C(0x4a4234),.55);scene.add(hemi);
 const sun=new THREE.DirectionalLight(C(0xffd0a0),2.6);
@@ -844,18 +899,23 @@ const IS_XBOX=/Xbox/i.test(navigator.userAgent);
 const SET={sens:1,fov:74,q:IS_XBOX?'low':'high'};
 try{const s=JSON.parse(localStorage.getItem('hcb-settings')||'{}');if(s.sens)SET.sens=s.sens;if(s.fov)SET.fov=s.fov;if(s.diff&&DIFF[s.diff])G.diff=s.diff;if(s.q==='low'||s.q==='high')SET.q=s.q;}catch(e){}
 function saveSet(){try{localStorage.setItem('hcb-settings',JSON.stringify({sens:SET.sens,fov:SET.fov,diff:G.diff,q:SET.q}));}catch(e){}}
-const SPAWN=new V3(9,0,30);
+const SPAWN=new V3(mapKey==='farmhouse'?9:13,0,30);
 const P={pos:SPAWN.clone(),vel:new V3(),vy:0,grounded:true,surf:'grass',yaw:0,pitch:0,crouch:false,crouchT:0,lean:0,ads:0,hp:100,alive:true,sprinting:false,sprintT:0,speed:0,w:'rifle',fireCd:0,reloadT:0,reloadDur:0,switchT:0,meleeT:0,meleeDone:false,throwT:0,nades:2,light:false,mode:'auto',spray:0,recoilVis:0,kick:0,bob:0,stepPhase:0,vault:null,deathT:0,lastDry:0};
 const WPN={
   rifle:{name:'AR-C 5.56 Carbine',mag:30,cur:30,res:150,res0:150,rpm:780,auto:true,dmg:40,fall0:25,fall1:45,minMul:.75,hip:.03,adsS:.0016,bloom:.0022,rv:.0105,rh:.0055,reload:2.3,reloadE:2.9,adsFov:52,adsTime:.2,hipPos:new V3(.135,-.15,-.37),adsPos:new V3(0,-.08,-.2),model:rifle,muzzle:rMuzzle,mag3:rMag},
   pistol:{name:'P-9 Service Pistol',mag:15,cur:15,res:60,res0:60,rpm:420,auto:false,dmg:46,fall0:15,fall1:30,minMul:.6,hip:.026,adsS:.0028,bloom:.004,rv:.024,rh:.007,reload:1.6,reloadE:1.95,adsFov:63,adsTime:.14,hipPos:new V3(.13,-.13,-.4),adsPos:new V3(0,-.02,-.27),model:pistol,muzzle:pMuzzle,mag3:pMag}
 };
 
+function applyLoadout(){
+  Object.assign(WPN.rifle,LOADOUTS[loadoutKey].stats);
+  rifle.scale.set(loadoutKey==='entry'?.9:1,1,loadoutKey==='entry'?.78:loadoutKey==='marksman'?1.15:1);
+}
+applyLoadout();
 /* ================= Bots ================= */
 const SPAWNS=[
   {id:'R1',l:0,x:9.4,z:8.8,route:[[9.4,8.8],[9.4,3.0],[11.6,3.0],[11.6,4.6],[14,4.6],[14,6.8],[11.6,6.8],[11.6,8.8]],must:true},
   {id:'T1',l:1,x:9.6,z:.8,lx:7.7,lz:6.0,must:true},
-  {id:'G1',l:0,x:24.2,z:5.5,lx:22,lz:9.6,peek:true},
+  {id:'G1',l:0,x:24.9,z:5.5,lx:22,lz:9.6,peek:true},
   {id:'G2',l:0,x:22.6,z:2.0,lx:18.3,lz:2.5,crouch:true},
   {id:'K1',l:0,x:14.0,z:1.6,lx:16.5,lz:-.5,crouch:true},
   {id:'D1',l:0,x:17.1,z:11.2,lx:10.5,lz:8.8},
@@ -869,6 +929,11 @@ const SPAWNS=[
   {id:'ST1',l:1,x:1.2,z:1.2,lx:7,lz:2.5},
   {id:'MB1',l:1,x:16.0,z:3.4,lx:16.2,lz:5.5},
 ];
+if(mapKey!=='farmhouse'){
+  SPAWNS.length=0;
+  const points=mapKey==='annex'?[[3,3],[6,4],[12,3],[16,4],[21,3],[24,4],[3,8],[6,11],[12,8],[16,11],[21,8],[24,11],[6,6],[16,6],[24,6]]:[[3,3],[6,3],[12,1.5],[16,4],[21,3.5],[23,4],[3,8],[6,11],[12,7.5],[16,11],[21,7.5],[23,11],[6,6],[16,6],[24,6]];
+  points.forEach(([x,z],i)=>SPAWNS.push({id:'A'+i,l:0,x,z,lx:x,lz:6,must:i===0||i===8,crouch:i%4===0,peek:i%3===0}));
+}
 const BM={skin:solid(0xa47e62,{roughness:.7}),bala:solid(0x1b1d1e,{roughness:.95}),vest:solid(0x2a2e26,{roughness:.9}),helm:solid(0x30342b,{roughness:.6}),gun:solid(0x141516,{roughness:.5}),boot:solid(0x1a1612,{roughness:.9}),glove:solid(0x1f1c18,{roughness:.9}),
   tops:[solid(0x3b4031,{roughness:.95}),solid(0x26292c,{roughness:.95}),solid(0x5a5341,{roughness:.95}),solid(0x343c46,{roughness:.95})],
   pants:[solid(0x2e3229,{roughness:.95}),solid(0x22252a,{roughness:.95}),solid(0x4c4637,{roughness:.95})],
@@ -977,7 +1042,7 @@ const tmpE=new V3(),tmpF=new V3();
 function alertBots(pos,radius,str,src,except){for(const b of bots){if(b.dead||b===except)continue;const d=b.pos.distanceTo(pos);if(d<radius)b.hear(src||pos,str*(1-d/radius));}}
 function spawnBots(){for(const b of bots)scene.remove(b.m.g);bots=[];botParts.length=0;
   const D=G.D;const must=SPAWNS.filter(s=>s.must),rest=SPAWNS.filter(s=>!s.must).sort(()=>Math.random()-.5);const pick=must.concat(rest.slice(0,D.count-must.length));
-  for(const s of pick)bots.push(new Bot(s));G.total=bots.length;}
+  for(const s of pick)bots.push(new Bot(s));G.total=bots.length;if(GFX===6)applyCompatibility();}
 
 /* ================= Player actions ================= */
 const K={};const mouse={l:false,r:false,click:false};let mdx=0,mdy=0,swayX=0,swayY=0;
@@ -1070,7 +1135,7 @@ function updHUD(dt){
   setT('hpNum',String(Math.max(0,Math.ceil(P.hp))));$('hpFill').style.width=clamp(P.hp,0,100)+'%';$('hpBar').classList.toggle('crit',P.hp<35);$('lowhp').style.opacity=P.hp<35?.9:0;
   setT('wName',w.name);setT('aMag',String(w.cur));setT('aRes','/ '+w.res);
   const am=$('aMag');am.classList.toggle('empty',w.cur===0);am.classList.toggle('low',w.cur>0&&w.cur<=w.mag*.25);
-  setT('fMode',P.w==='rifle'?(P.mode==='auto'?'AUTO':'SINGLE'):'SEMI');setT('nades',String(P.nades));setT('lightS',P.light?'ON':'OFF');
+  setT('fMode',P.w==='rifle'&&WPN.rifle.auto?(P.mode==='auto'?'AUTO':'SINGLE'):'SEMI');setT('nades',String(P.nades));setT('lightS',P.light?'ON':'OFF');
   setT('stance',P.vault?'VAULTING':P.sprinting?'SPRINTING':P.crouch?'CROUCHED':'STANDING');
   const lvl=P.pos.y>2.6?1:0;const r=roomAt(P.pos.x,P.pos.z,lvl);
   setT('locFloor',r?(lvl?'Upper floor':'Ground floor'):'Exterior');setT('locRoom',r?r.n:(P.pos.z>12&&P.pos.z<14.4&&P.pos.x>6&&P.pos.x<12?'Front porch':P.pos.z<0?'Back yard':P.pos.x>26||P.pos.x<0?'Side yard':'Front yard'));
@@ -1169,16 +1234,16 @@ function resetLevel(){
   for(const g of glasses)restoreGlass(g);for(const b of barricades)restoreBarricade(b);
   for(const d of decals)d.visible=false;for(const n of nades)scene.remove(n.m);nades.length=0;
   for(let i=0;i<PN;i++){pLife[i]=0;pPos[i*3+1]=-999;}for(const s of smokes){s.life=0;s.s.visible=false;}
-  G.D=DIFF[G.diff];spawnBots();
+  G.D=DIFF[G.diff];applyLoadout();spawnBots();
   Object.assign(P,{vel:new V3(),vy:0,grounded:true,yaw:0,pitch:-.03,crouch:false,crouchT:0,lean:0,ads:0,hp:100,alive:true,sprinting:false,sprintT:0,speed:0,w:'rifle',fireCd:0,reloadT:0,switchT:0,meleeT:0,throwT:0,nades:2,light:false,mode:'auto',spray:0,recoilVis:0,kick:0,stepPhase:0,vault:null,deathT:0});
-  P.pos.copy(SPAWN);for(const k in WPN){WPN[k].cur=WPN[k].mag;WPN[k].res=WPN[k].res0;}
+  P.pos.copy(SPAWN);PAD.leanDir=0;PAD.fullT=0;PAD.fire=PAD.ads=PAD.lb=PAD.rb=PAD.sprint=false;mouse.click=false;P.mode=WPN.rifle.auto?'auto':'single';for(const k in WPN){WPN[k].cur=WPN[k].mag;WPN[k].res=WPN[k].res0;}
   Object.assign(G,{time:300,elapsed:0,shots:0,hits:0,heads:0,kills:0,dmg:0,result:null,cause:''});
   $('feed').innerHTML='';$('dmgdir').innerHTML='';shake=0;vigT=0;
 }
 function lockPointer(){try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{G.noLock=true;});}catch(e){G.noLock=true;}}
 function startGame(fromPad){if(G.state==='play'&&!G.paused&&fromPad!=='restart'&&$('menu').hidden&&$('pause').hidden)return;audioInit();resetLevel();G.state='play';G.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
   camera.fov=SET.fov;camera.updateProjectionMatrix();if(fromPad===true||padRecent())G.noLock=true;else lockPointer();
-  toast('Clear House · '+G.D.label,'Hollow Creek Farmhouse',`Neutralise ${G.total} hostiles · 5:00`,4200);}
+  toast('Clear House · '+G.D.label,MAP.name,`Neutralise ${G.total} hostiles · 5:00`,4200);}
 function pauseGame(){if(G.state!=='play'||G.paused)return;G.paused=true;G.pxDone=false;$('pause').hidden=false;try{$('diagLine').textContent=diagText();}catch(e){}for(const k in K)K[k]=false;mouse.l=mouse.r=false;}
 function resumeGame(){$('pause').hidden=true;G.paused=false;audioInit();if(!padRecent())lockPointer();}
 function endGame(res){if(G.state!=='play')return;G.state='end';G.result=res;if(document.pointerLockElement)document.exitPointerLock();for(const k in K)K[k]=false;mouse.l=mouse.r=false;
@@ -1187,11 +1252,11 @@ function endGame(res){if(G.state!=='play')return;G.state='end';G.result=res;if(d
   $('endNote').textContent=win?`All ${G.total} hostiles neutralised.`:res==='time'?`${G.total-G.kills} hostiles still inside when the clock ran out.`:`${G.cause}. ${G.total-G.kills} of ${G.total} hostiles remained.`;
   $('sTime').textContent=fmtTime(G.elapsed);$('sKills').textContent=`${G.kills}/${G.total}`;$('sHead').textContent=G.heads;$('sAcc').textContent=(G.shots?Math.round(100*G.hits/G.shots):0)+'%';$('sDmg').textContent=Math.round(G.dmg);$('sShots').textContent=G.shots;
   let grade='';if(win){const sc=(300-G.elapsed)*.5+(G.shots?100*G.hits/G.shots:0)+G.heads*6-G.dmg*.6;grade=sc>190?'S':sc>140?'A':sc>95?'B':'C';
-    let best=null;try{best=JSON.parse(localStorage.getItem('hcb-best')||'{}');}catch(e){best={};}const prev=best[G.diff];const isBest=!prev||G.elapsed<prev;if(isBest){best[G.diff]=G.elapsed;try{localStorage.setItem('hcb-best',JSON.stringify(best));}catch(e){}}
+    let best=null;try{best=JSON.parse(localStorage.getItem(mapKey==='farmhouse'?'hcb-best':'hcb-best-'+mapKey)||'{}');}catch(e){best={};}const prev=best[G.diff];const isBest=!prev||G.elapsed<prev;if(isBest){best[G.diff]=G.elapsed;try{localStorage.setItem(mapKey==='farmhouse'?'hcb-best':'hcb-best-'+mapKey,JSON.stringify(best));}catch(e){}}
     $('grade').textContent=`Rating ${grade}${isBest?' · new best time on '+G.D.label:' · best '+fmtTime(prev)}`;}else $('grade').textContent='';
   setTimeout(()=>{$('end').hidden=false;$('hud').hidden=true;},win?600:0);showBest();}
 function toMenu(){G.state='menu';G.paused=false;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=true;$('menu').hidden=false;if(document.pointerLockElement)document.exitPointerLock();resetLevel();showBest();}
-function showBest(){let best={};try{best=JSON.parse(localStorage.getItem('hcb-best')||'{}');}catch(e){}const s=Object.keys(DIFF).filter(k=>best[k]).map(k=>`${DIFF[k].label} ${fmtTime(best[k])}`);$('best').textContent=s.length?'Best clear times · '+s.join(' · '):'';}
+function showBest(){let best={};try{best=JSON.parse(localStorage.getItem(mapKey==='farmhouse'?'hcb-best':'hcb-best-'+mapKey)||'{}');}catch(e){}const s=Object.keys(DIFF).filter(k=>best[k]).map(k=>`${DIFF[k].label} ${fmtTime(best[k])}`);$('best').textContent=s.length?'Best clear times · '+s.join(' · '):'';}
 
 /* ================= Gamepad ================= */
 const PAD={leanDir:0,fullT:0,connected:false,prev:[],lx:0,ly:0,rx:0,ry:0,fire:false,ads:false,lb:false,rb:false,sprint:false,lastUse:-1e9};
@@ -1204,7 +1269,7 @@ function pollPad(dt){
   let gp=null;try{const list=navigator.getGamepads?navigator.getGamepads():[];for(const g of list)if(g&&g.connected&&g.buttons.length>=12){gp=g;break;}}catch(e){}
   if(!gp&&KEYPAD.used)gp=keyPadState();
   PAD.gp=gp;
-  if(!gp){if(PAD.connected){PAD.connected=false;PAD.fire=PAD.ads=PAD.lb=PAD.rb=false;PAD.lx=PAD.ly=PAD.rx=PAD.ry=0;}return;}
+  if(!gp){if(PAD.connected){PAD.connected=false;PAD.fire=PAD.ads=PAD.lb=PAD.rb=false;PAD.lx=PAD.ly=PAD.rx=PAD.ry=0;PAD.leanDir=0;PAD.fullT=0;PAD.sprint=false;PAD.prev=[];if(G.state==='play'&&!G.paused)pauseGame();}return;}
   if(!PAD.connected){PAD.connected=true;$('deployHint').textContent='PRESS Ⓐ';}
   const bt=i=>!!(gp.buttons[i]&&(gp.buttons[i].pressed||gp.buttons[i].value>.4));
   const hit=i=>bt(i)&&!PAD.prev[i];
@@ -1213,9 +1278,19 @@ function pollPad(dt){
   let any=PAD.lx||PAD.ly||PAD.rx||PAD.ry;for(let i=0;i<gp.buttons.length;i++)if(bt(i))any=true;
   if(any)PAD.lastUse=performance.now();
   const ui=G.state!=='play'||G.paused;
-  if((G.state==='menu'||G.paused)&&hit(2)){nextGfx();return;}
-  if((G.state==='menu'||G.paused)&&(hit(12)||hit(13)))setQuality(hit(12)?'high':'low',true);
-  if(G.state==='menu'){if(hit(0))startGame(true);const order=['recruit','regular','veteran'];if(hit(14)||hit(15)){const k=order.indexOf(G.diff);setDiff(order[clamp(k+(hit(15)?1:-1),0,2)]);}}
+  if((G.state==='menu'||G.paused)&&hit(2)){PAD.prev=gp.buttons.map((b,i)=>bt(i));nextGfx();return;}
+  if(G.paused&&(hit(12)||hit(13)))setQuality(hit(12)?'high':'low',true);
+  if(G.state==='menu'){
+    if(hit(12)||hit(13)){menuRow=(menuRow+(hit(13)?1:3))%4;markMenuRow();}
+    if(hit(14)||hit(15)){const dir=hit(15)?1:-1;
+      if(menuRow===0){const order=Object.keys(DIFF);setDiff(order[(order.indexOf(G.diff)+dir+order.length)%order.length]);}
+      if(menuRow===1)cycleMap(dir);
+      if(menuRow===2)cycleLoadout(dir);
+      if(menuRow===3)setQuality(SET.q==='low'?'high':'low',true);
+    }
+    if(hit(5))cycleLoadout(1);
+    if(hit(0))startGame(true);
+  }
   else if(G.state==='end'&&!$('end').hidden){if(hit(0))startGame(true);else if(hit(1))toMenu();}
   else if(G.state==='play'&&G.paused){if(hit(0)||hit(9))togglePause();else if(hit(3)){$('pause').hidden=true;startGame('restart');}else if(hit(1))toMenu();}
   else if(G.state==='play'){
@@ -1226,7 +1301,7 @@ function pollPad(dt){
       PAD.fullT=(PAD.ly<-.9&&Math.abs(PAD.lx)<.45)?PAD.fullT+dt:0;PAD.sprint=PAD.fullT>.35&&!lt;if(PAD.sprint)PAD.leanDir=0;
       PAD.lb=PAD.leanDir===-1;PAD.rb=PAD.leanDir===1;
       if(hit(4))toggleCrouch();if(hit(2))startReload();if(hit(0))tryVault();if(hit(3))switchTo(P.w==='rifle'?'pistol':'rifle');
-      if(hit(1))melee();if(hit(5))throwNade();if(hit(12)){P.light=!P.light;sClick(2600,.12);}if(hit(14)&&P.w==='rifle'){P.mode=P.mode==='auto'?'single':'auto';sClick(1800,.12);}
+      if(hit(1))melee();if(hit(5))throwNade();if(hit(12)){P.light=!P.light;sClick(2600,.12);}if(hit(14)&&P.w==='rifle'&&WPN.rifle.auto){P.mode=P.mode==='auto'?'single':'auto';sClick(1800,.12);}
       if(P.alive&&(PAD.rx||PAD.ry)){
         let slow=1;const f=fwd();for(const b of bots){if(b.dead||!b.canSee)continue;const c=tmpF.set(b.pos.x,b.pos.y+(b.crouch?.9:1.25),b.pos.z).sub(camera.position);const d=c.length();if(d>40)continue;if(c.dot(f)/d>Math.cos(Math.max(.035,.5/d))){slow=.55;break;}}
         const sp=3.4*SET.sens*lerp(1,.5,P.ads)*slow*dt;const cx=Math.sign(PAD.rx)*PAD.rx*PAD.rx,cy=Math.sign(PAD.ry)*PAD.ry*PAD.ry;
@@ -1266,7 +1341,7 @@ addEventListener('keydown',e=>{
     case 'KeyC':toggleCrouch();break;
     case 'KeyV':melee();break;case 'KeyG':throwNade();break;
     case 'KeyF':P.light=!P.light;sClick(2600,.12);break;
-    case 'KeyB':if(P.w==='rifle'){P.mode=P.mode==='auto'?'single':'auto';sClick(1800,.12);}break;
+    case 'KeyB':if(P.w==='rifle'&&WPN.rifle.auto){P.mode=P.mode==='auto'?'single':'auto';sClick(1800,.12);}break;
     case 'Space':tryVault();break;
   }
 });
@@ -1283,6 +1358,15 @@ document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElemen
 document.addEventListener('pointerlockerror',()=>{G.noLock=true;});
 
 // menu wiring
+function cycleMap(dir){const keys=Object.keys(MAPS),next=keys[(keys.indexOf(mapKey)+dir+keys.length)%keys.length];selectMap(next);}
+function selectMap(k){if(!MAPS[k]||k===mapKey)return;try{localStorage.setItem('hcb-map',k);}catch(e){}const u=new URL(location.href);u.searchParams.set('map',k);location.assign(u.toString());}
+function cycleLoadout(dir){const keys=Object.keys(LOADOUTS);setLoadout(keys[(keys.indexOf(loadoutKey)+dir+keys.length)%keys.length]);}
+function setLoadout(k){if(!LOADOUTS[k])return;loadoutKey=k;try{localStorage.setItem('hcb-loadout',k);}catch(e){}applyLoadout();for(const b of document.querySelectorAll('[data-kit]'))b.setAttribute('aria-checked',String(b.dataset.kit===k));}
+function markMenuRow(){const ids=['row-threat','row-map','row-loadout','row-graphics'];ids.forEach((id,i)=>$(id).classList.toggle('pad-focus',i===menuRow));if(PAD.connected)$(ids[menuRow]).scrollIntoView({block:'center',behavior:'smooth'});}
+for(const [k,m] of Object.entries(MAPS)){const b=document.createElement('button');b.type='button';b.className='choice';b.setAttribute('role','radio');b.setAttribute('aria-checked',String(k===mapKey));b.innerHTML=m.name+'<small>'+m.sub+'</small>';b.onclick=()=>selectMap(k);$('mapChoices').appendChild(b);}
+for(const [k,l] of Object.entries(LOADOUTS)){const b=document.createElement('button');b.type='button';b.className='choice';b.dataset.kit=k;b.setAttribute('role','radio');b.innerHTML=l.label+'<small>'+l.note+'</small>';b.onclick=()=>setLoadout(k);$('loadoutChoices').appendChild(b);}
+setLoadout(loadoutKey);markMenuRow();$('mapTitle').textContent=MAP.name;$('missionNote').textContent=MAP.note+' Neutralise all armed bots within five minutes.';$('upperPlan').hidden=mapKey!=='farmhouse';if(mapKey!=='farmhouse')$('planCaption').textContent='Single-storey floor plan · insertion from south yard';
+
 function setDiff(d){G.diff=d;for(const b of document.querySelectorAll('.diff button'))b.setAttribute('aria-checked',String(b.dataset.d===d));saveSet();}
 for(const b of document.querySelectorAll('.diff button'))b.addEventListener('click',()=>setDiff(b.dataset.d));
 function bindSens(id,out){const el=$(id);el.value=SET.sens;$(out).textContent=SET.sens.toFixed(2);el.addEventListener('input',()=>{SET.sens=+el.value;$('sensOut').textContent=$('sensOut2').textContent=SET.sens.toFixed(2);$('sens').value=$('sens2').value=SET.sens;saveSet();});}
@@ -1304,14 +1388,15 @@ function drawPlan(cv,level){
   const X=x=>ox+x*S,Z=z=>oy+z*S;
   ctx.font='600 10px "JetBrains Mono", monospace';ctx.textAlign='center';ctx.textBaseline='middle';
   for(const r of ROOMS){if(r.l!==level)continue;ctx.fillStyle='rgba(205,216,222,.05)';ctx.fillRect(X(r.x0),Z(r.z0),(r.x1-r.x0)*S,(r.z1-r.z0)*S);ctx.fillStyle=mut;const words=r.n.toUpperCase().split(' ');words.forEach((w,i)=>ctx.fillText(w,X((r.x0+r.x1)/2),Z((r.z0+r.z1)/2)+(i-(words.length-1)/2)*12));}
-  ctx.strokeStyle=mut;ctx.lineWidth=1;for(let i=0;i<=16;i++){const z=10.5-i*RUN;ctx.beginPath();ctx.moveTo(X(7.07),Z(z));ctx.lineTo(X(8.3),Z(z));ctx.stroke();}
-  ctx.strokeRect(X(7.07),Z(5.6),1.23*S,4.9*S);
+  ctx.strokeStyle=mut;ctx.lineWidth=1;if(mapKey==='farmhouse'){for(let i=0;i<=16;i++){const z=10.5-i*RUN;ctx.beginPath();ctx.moveTo(X(7.07),Z(z));ctx.lineTo(X(8.3),Z(z));ctx.stroke();}
+  ctx.strokeRect(X(7.07),Z(5.6),1.23*S,4.9*S);}
   for(const w of PLAN){if(w.level!==level||w.header)continue;const ops=w.ops.slice().sort((a,b)=>a.c-b.c);let cur=w.a0;
     const seg=(a,b,style,lw,dash)=>{ctx.strokeStyle=style;ctx.lineWidth=lw;ctx.setLineDash(dash||[]);ctx.beginPath();if(w.axis==='x'){ctx.moveTo(X(a),Z(w.c));ctx.lineTo(X(b),Z(w.c));}else{ctx.moveTo(X(w.c),Z(a));ctx.lineTo(X(w.c),Z(b));}ctx.stroke();ctx.setLineDash([]);};
     for(const o of ops){const a=o.c-o.w/2,b=o.c+o.w/2;if(a>cur)seg(cur,a,fg,w.ext?4:2.2);if(o.type==='window')seg(a,b,'rgba(150,200,210,.9)',1.5);else if(o.bar)seg(a,b,amb,3,[3,3]);else if(o.type==='shutter')seg(a,b,mut,2,[6,3]);cur=b;}
     if(cur<w.a1)seg(cur,w.a1,fg,w.ext?4:2.2);}
-  if(level===0){ctx.fillStyle=amb;ctx.beginPath();ctx.moveTo(X(8.75),Z(13.2));ctx.lineTo(X(8.35),Z(13.95));ctx.lineTo(X(9.15),Z(13.95));ctx.fill();ctx.textAlign='left';ctx.fillText('INSERTION · SOUTH YARD',X(9.5),Z(13.6));
+  if(level===0&&mapKey==='farmhouse'){ctx.fillStyle=amb;ctx.beginPath();ctx.moveTo(X(8.75),Z(13.2));ctx.lineTo(X(8.35),Z(13.95));ctx.lineTo(X(9.15),Z(13.95));ctx.fill();ctx.textAlign='left';ctx.fillText('INSERTION · SOUTH YARD',X(9.5),Z(13.6));
     ctx.strokeStyle=mut;ctx.setLineDash([2,3]);ctx.strokeRect(X(6),Z(12.15),6*S,2.15*S);ctx.setLineDash([]);}
+  if(level===0&&mapKey!=='farmhouse'){ctx.fillStyle=amb;ctx.fillText('SOUTH ENTRY ↓',X(13),Z(13.5));}
   ctx.textAlign='left';ctx.fillStyle=mut;ctx.fillText('N ↑',X(0),12);ctx.textAlign='right';ctx.fillText('1 square = 1 m',X(26),12);
   ctx.strokeStyle='rgba(205,216,222,.07)';ctx.lineWidth=1;for(let x=0;x<=26;x++){ctx.beginPath();ctx.moveTo(X(x),Z(-.2));ctx.lineTo(X(x),Z(-.5));ctx.stroke();}
 }
@@ -1319,6 +1404,19 @@ function plans(){drawPlan($('plan0'),0);drawPlan($('plan1'),1);}
 plans();if(document.fonts&&document.fonts.ready)document.fonts.ready.then(plans);
 
 /* ================= Graphics quality & diagnostics ================= */
+// Fewer shader features for Xbox/ANGLE drivers. Also covers bots created on reset.
+const compatibleMaterials=new WeakMap();
+function compatibleMaterial(m){
+  if(!m||!m.isMeshStandardMaterial)return m;
+  if(!compatibleMaterials.has(m)){const next=new THREE.MeshLambertMaterial({color:m.color.clone(),map:m.map||null,emissive:m.emissive.clone(),emissiveIntensity:m.emissiveIntensity,transparent:m.transparent,opacity:m.opacity,side:m.side,depthWrite:m.depthWrite});next.userData=m.userData;compatibleMaterials.set(m,next);}
+  return compatibleMaterials.get(m);
+}
+function applyCompatibility(){if(GFX!==6)return;
+  for(const world of [scene,vmScene])world.traverse(o=>{if(o.material)o.material=Array.isArray(o.material)?o.material.map(compatibleMaterial):compatibleMaterial(o.material);});
+  sun.intensity=1.0;hemi.intensity=.9;
+}
+applyCompatibility();
+
 function showDiag(msg){const d=$('diag');d.textContent=msg;d.hidden=false;clearTimeout(showDiag.t);showDiag.t=setTimeout(()=>{d.hidden=true;},12000);}
 function setQuality(q,save){
   SET.q=q;const low=q==='low';

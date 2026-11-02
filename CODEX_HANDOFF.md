@@ -1,3 +1,13 @@
+# Current implementation update
+
+The game now has three maps, three gun loadouts, controller-only briefing selection and display mode 7 (Xbox compatibility). See README.md for current controls, startup and test instructions. Farmhouse garage bot G1 was moved out of a crate. Controller disconnect pauses the match; input edges and lean state reset safely. Browser tests exercise all maps in standard and compatibility modes; physical Xbox compatibility and the old white-screen issue still need console verification.
+
+The material conversion is applied again when bots respawn. New map selection reloads the page using `?map=farmhouse|depot|annex`. New layouts have single-storey floor plans and map-specific bot positions and scores. Gun kits change primary stats and model scale, and retain the original pistol.
+
+The brief below is historical background; its one-map description, six-mode list and menu-navigation details are superseded by README.md.
+
+---
+
 # Hollow Creek Breach: handoff brief
 
 Paste everything below into Codex or ChatGPT.
